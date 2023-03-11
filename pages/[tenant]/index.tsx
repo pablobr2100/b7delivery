@@ -1,9 +1,23 @@
+import { useEffect } from 'react';
+import { GetServerSideProps } from 'next';
+
+import styles from '@/styles/Home.module.css';
+
 import { Banner } from '@/components/Banner';
 import { ProductCard } from '@/components/ProductCard';
 import { SearchInput } from '@/components/SearchInput';
-import styles from '@/styles/Home.module.css';
 
-const Home = () => {
+import { useAppContext } from '@/contexts/AppContext';
+import { createApi } from '@/libs/createApi';
+import { Tenant } from '@/types/Tenant';
+
+const Home = (data: Props) => {
+  const { tenant, setTenant } = useAppContext();
+
+  useEffect(() => {
+    setTenant(data.tenant);
+  });
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -18,17 +32,14 @@ const Home = () => {
           </div>
           <div className={styles.headerTopRight}>
             <div className={styles.menuButton}>
-              <div className={styles.menuButtonLine}></div>
-              <div className={styles.menuButtonLine}></div>
-              <div className={styles.menuButtonLine}></div>
+              <div className={styles.menuButtonLine} style={{backgroundColor: tenant?.mainColor}}></div>
+              <div className={styles.menuButtonLine} style={{backgroundColor: tenant?.mainColor}}></div>
+              <div className={styles.menuButtonLine} style={{backgroundColor: tenant?.mainColor}}></div>
             </div>
           </div>
         </div>
         <div className={styles.headerBottom}>
-          <SearchInput
-            mainColor='#fb9400'
-            onSearch={()=>null} 
-          />
+          <SearchInput onSearch={()=>null} />
         </div>
       </header>
 
@@ -43,8 +54,6 @@ const Home = () => {
             name: 'Texa Burger',
             price: 'R$ 25,50'
           }}
-          mainColor="#fb9400"
-          secondColor='#ccc'
         />
         <ProductCard 
           data={{
@@ -54,8 +63,6 @@ const Home = () => {
             name: 'Texa Burger',
             price: 'R$ 25,50'
           }}
-          mainColor="#fb9400"
-          secondColor='#ccc'
         />
         <ProductCard 
           data={{
@@ -65,8 +72,6 @@ const Home = () => {
             name: 'Texa Burger',
             price: 'R$ 25,50'
           }}
-          mainColor="#fb9400"
-          secondColor='#ccc'
         />
       </div>
     </div>
@@ -74,3 +79,22 @@ const Home = () => {
 }
 
 export default Home;
+
+type Props = {
+  tenant: Tenant;
+}
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  const { tenant: tenantSlug } = context.query;
+  const api = createApi();
+
+  const tenant = await api.getTenant(tenantSlug as string)
+  if (!tenant) {
+    return { redirect: { destination: '/', permanent: false } }
+  }
+
+  return {
+    props: {
+      tenant
+    }
+  }
+}
